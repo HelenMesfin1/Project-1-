@@ -3,7 +3,12 @@ Team member names and roles: Helen Mesfin, Osemeke Otule, Gavin Schneider, Naode
 Domain focus and problem statement: Create a database with artwork from UMD students over the past 20 years to make student art work acessible to everyone on campus 
 
 Installation and setup instructions: 
+Make sure python and VScode are installed on all devices properly
+
 Usage examples for key functions:
+Add tagging 
+Search for artworks 
+Sort Artworks
 
 Function library overview and organization:
 Organization and Tagging
