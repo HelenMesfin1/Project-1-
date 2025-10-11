@@ -1,0 +1,62 @@
+# Sample dataset: list of artworks stored as dictionaries
+artworks = [
+    {"id": 1, "title": "Geolocation", "artist": "Nate Larson & Marni Shindelman", "year": 2013, 
+     "medium": "Photo", "department": "Photography", "tags": ["photography", "realism"]},
+
+    {"id": 2, "title": "Cariño", "artist": "Edgar Reyes", "year": 2021, 
+     "medium": "Multimedia", "department": "Photography", "tags": ["multimedia", "realism"]},
+
+    {"id": 3, "title": "All American Boys", "artist": "Akea Brionne ", "year": 2020, 
+     "medium": "Photo", "department": "Photography", "tags": ["multimedia", "realism"]}
+]
+
+# --- Function 1: Add a tag to an artwork ---
+def add_tag(artwork_id, tag):
+    for artwork in artworks:
+        if artwork["id"] == artwork_id:
+            if tag not in artwork["tags"]:
+                artwork["tags"].append(tag)
+                print(f"✅ Tag '{tag}' added to '{artwork['title']}'")
+            else:
+                print(f"⚠️ Tag '{tag}' already exists for '{artwork['title']}'")
+            return
+    print("❌ Artwork not found.")
+
+
+# --- Function 2: Search artworks with optional filters ---
+def search_artworks(query="", filters=None):
+    if filters is None:
+        filters = {}
+    results = []
+    for artwork in artworks:
+        if query.lower() in artwork["title"].lower() or query.lower() in artwork["artist"].lower():
+            match = True
+            for key, value in filters.items():
+                if str(artwork.get(key)).lower() != str(value).lower():
+                    match = False
+                    break
+            if match:
+                results.append(artwork)
+    return results
+
+
+# --- Function 3: Sort artworks by a chosen attribute ---
+def sort_artworks(order_by="year"):
+    try:
+        return sorted(artworks, key=lambda x: x[order_by])
+    except KeyError:
+        print(f"⚠️ Cannot sort by '{order_by}' – invalid key.")
+        return artworks
+
+
+# --- Function 4: Group artworks by an attribute ---
+from itertools import groupby
+
+def group_by(attribute):
+    try:
+        sorted_artworks = sorted(artworks, key=lambda x: x[attribute])
+        groups = {key: list(group) for key, group in groupby(sorted_artworks, key=lambda x: x[attribute])}
+        return groups
+    except KeyError:
+        print(f"⚠️ Invalid attribute '{attribute}' for grouping.")
+        return {}
