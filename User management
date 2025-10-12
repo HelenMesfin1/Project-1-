@@ -1,0 +1,62 @@
+users = {} #dictionary for current users
+
+def register_user(): #create a new user account
+    print("Create an account")
+    username = input("Enter a username: ").strip()
+    password = input("Enter a password: ").strip()
+    role = "user"
+
+    for user in users:
+        if user == username:
+            print("Username already exists.")
+            return
+    
+    users[username] = {
+        "password": password,
+        "role": "user" #default role is user
+    }
+
+def login_user(): #log in for existing users
+    print("User Login")
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ").strip()
+
+    user = users.get(username)
+
+    if not user:
+        print("User not found.")
+        return
+
+    if password == user("password"):
+        print(f"Login successful, welcome user {username}.")
+    else:
+        print("Incorrect password.")
+
+def assign_role(username: str, new_role: str): #change roles for existing users
+    valid_roles = {"user", "admin"}
+
+    if new_role not in valid_roles:
+        print("Invalid role. Must be 'user' or 'admin'.")
+        return
+
+    if username not in users:
+        print("User does not exist.")
+        return
+    
+    old_role = users[username]["role"]
+    users[username]["role"] = new_role
+    print(f"User {username} changed role to {new_role}.")
+
+def delete_user(users, username): #delete existing user
+    if username in users:
+        confirm = input(f"Are you sure you want to delete {username}? yes/no: ").strip().lower()
+        if confirm == 'yes':
+            del users[username]
+            print(f"User {username} has been deleted.")
+            return True
+        else:
+            print("User not deleted.")
+            return False
+    else:
+        print(f"User {username} not found.")
+        return False
