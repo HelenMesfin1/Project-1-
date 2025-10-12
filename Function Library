@@ -182,4 +182,151 @@ def review_artwork_submissions(submissions: List[Dict]) -> List[Dict]:
 
 
 
+
+
 #ARTWORK MANAGEMENT
+#FUNCTION 1
+database = []  
+def upload_artwork(user_id, artwork_data, metadata):
+    """
+    Upload new artwork along with metadata such as title, description, medium, and size.
+
+    Args:
+        user_id (str): The unique ID of the user uploading the artwork.
+        artwork_data (str): The artwork file data or file path.
+        metadata (dict): A dictionary containing artwork details like:
+            - title (str)
+            - description (str)
+            - medium (str)
+            - size (str)
+            - date (str)
+
+    Returns:
+        str: A confirmation message including the artwork title.
+
+    Raises:
+        ValueError: If required fields (title or description) are missing.
+    """
+    if not metadata.get("title") or not metadata.get("description"):
+        raise ValueError("Both 'title' and 'description' are required.")
+
+    artwork = {
+        "user_id": user_id,
+        "image": artwork_data,
+        "title": metadata.get("title"),
+        "description": metadata.get("description"),
+        "medium": metadata.get("medium"),
+        "size": metadata.get("size"),
+        "date": metadata.get("date")
+    }
+    database.append(artwork)
+    return f"Artwork '{artwork['title']}' uploaded successfully!"
+
+
+#FUNCTION 2
+def edit_artwork(artwork_id, updated_data):
+    """
+    Modify details about an existing artwork.
+
+    Args:
+        artwork_id (int): The ID of the artwork to edit.
+        updated_data (dict): Key-value pairs of fields to update (e.g., title, description).
+
+    Returns:
+        str: Confirmation message after updating the artwork.
+
+    Raises:
+        IndexError: If the artwork_id does not exist.
+    """
+    if artwork_id >= len(database) or artwork_id < 0:
+        raise IndexError("Artwork not found.")
+    database[artwork_id].update(updated_data)
+    return f"Artwork '{database[artwork_id].get('title', 'Untitled')}' updated successfully!"
+
+
+#FUNCTION 3
+def delete_artwork(user_id, artwork_id, is_admin=False):
+    """
+    Remove an artwork from the database (admin or creator only).
+
+    Args:
+        user_id (str): The ID of the user attempting to delete the artwork.
+        artwork_id (int): The index or unique ID of the artwork to delete.
+        is_admin (bool, optional): Whether the user has admin privileges. Defaults to False.
+
+    Returns:
+        str: A message confirming successful deletion.
+
+    Raises:
+        IndexError: If the artwork_id does not exist.
+        PermissionError: If the user is not authorized to delete the artwork.
+    """
+    if artwork_id >= len(database) or artwork_id < 0:
+        raise IndexError("Artwork not found.")
+    artwork = database[artwork_id]
+    owner_id = artwork.get("user_id")
+    if user_id != owner_id and not is_admin:
+        raise PermissionError("You do not have permission to delete this artwork.")
+    print(f"User '{user_id}' is deleting artwork '{artwork.get('title', 'Untitled')}'.")
+    deleted = database.pop(artwork_id)
+    return f"Artwork '{deleted.get('title', 'Untitled')}' deleted successfully."
+
+
+#FUNCTION 4
+def list_artworks(filter_criteria=None):
+    """
+    Display a list of artworks based on various filter criteria.
+
+    Args:
+        filter_criteria (dict, optional): A dictionary of fields and values to filter by.
+            Example:
+                {
+                    "user_id": "u1",
+                    "medium": "Oil on Canvas",
+                    "year": "2024",
+                    "department": "Fine Arts"
+                }
+            If None or empty, all artworks will be listed.
+
+    Returns:
+        list: A list of artworks (dicts) matching the provided filters.
+
+    Raises:
+        ValueError: If filter_criteria is not a dictionary.
+    """
+
+    if "database" not in globals() or not isinstance(database, list):
+        print("No artwork database found.")
+        return []
+    if filter_criteria is None:
+        filter_criteria = {}
+    elif not isinstance(filter_criteria, dict):
+        raise ValueError("Filter criteria must be a dictionary.")
+    print("\n📋 Listing Artworks")
+    print("-" * 50)
+    results = []
+    for art in database:
+        match = True
+        for key, value in filter_criteria.items():
+            if str(art.get(key, "")).lower() != str(value).lower():
+                match = False
+                break
+        if match:
+            results.append(art)
+
+    if not results:
+        print("No artworks match the given filters.")
+    else:
+        for i, art in enumerate(results, start=1):
+            title = art.get("title", "Untitled")
+            user = art.get("user_id", "Unknown")
+            medium = art.get("medium", "Unknown Medium")
+            date = art.get("date", "Unknown Date")
+            print(f"{i}. {title} by {user} | {medium} | {date}")
+    print(f"\nTotal found: {len(results)}")
+    return results
+
+
+
+
+#ORGANIZAION & TAGGING
