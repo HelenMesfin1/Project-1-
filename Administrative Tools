@@ -1,0 +1,180 @@
+from datetime import datetime
+import os
+import json
+from typing import List, Dict
+
+
+# SIMPLE FUNCTION
+def approve_artwork(artwork_id: str) -> dict:
+    """Mark an artwork as approved.
+
+    Args:
+        artwork_id (str): Unique ID of the artwork.
+
+    Returns:
+        dict: Approval record with artwork ID, status, and timestamp.
+
+    Raises:
+        ValueError: If artwork_id is missing or invalid.
+    """
+    if not isinstance(artwork_id, str) or not artwork_id.strip():
+        raise ValueError("artwork_id must be a non-empty string.")
+    approval_time = datetime.utcnow().isoformat()
+    return {"artwork_id": artwork_id, "status": "approved", "approved_at": approval_time}
+
+
+# SIMPLE FUNCTION 
+def flag_artwork(artwork_id: str, reason: str) -> dict:
+    """Flag an artwork for review due to inappropriate or incomplete content.
+
+    Args:
+        artwork_id (str): Unique ID of the artwork.
+        reason (str): Description of why the item was flagged.
+
+    Returns:
+        dict: Record of the flag event containing ID, reason, and timestamp.
+
+    Raises:
+        ValueError: If artwork_id or reason are missing or invalid.
+    """
+    if not all(isinstance(v, str) and v.strip() for v in [artwork_id, reason]):
+        raise ValueError("artwork_id and reason must be non-empty strings.")
+    return {
+        "artwork_id": artwork_id.strip(),
+        "reason": reason.strip(),
+        "status": "flagged",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+# MEDIUM FUNCTION
+def audit_log(event: str, user_id: str, details: dict = None, log_file: str = "audit_log.json") -> dict:
+    """Record a user or system event in a persistent audit log file.
+
+    Args:
+        event (str): Description of the event (e.g., 'Artwork Approved').
+        user_id (str): ID of the user performing the action.
+        details (dict, optional): Additional metadata for the event.
+        log_file (str): File path for storing logs.
+
+    Returns:
+        dict: The created audit record including timestamp.
+
+    Raises:
+        ValueError: If event or user_id are missing.
+        IOError: If the log file cannot be read or written.
+    """
+    if not all(isinstance(v, str) and v.strip() for v in [event, user_id]):
+        raise ValueError("event and user_id must be non-empty strings.")
+
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "user_id": user_id.strip(),
+        "event": event.strip(),
+        "details": details or {}
+    }
+
+    try:
+        logs = []
+        if os.path.exists(log_file):
+            with open(log_file, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+        logs.append(log_entry)
+        with open(log_file, "w", encoding="utf-8") as f:
+            json.dump(logs, f, indent=2)
+    except Exception as e:
+        raise IOError(f"Failed to write to audit log: {e}") from e
+
+    return log_entry
+
+
+#  MEDIUM FUNCTION
+def backup_archive(source_dir: str, destination_dir: str) -> str:
+    """Simulate a backup by verifying source contents and generating a timestamped report.
+
+    Args:
+        source_dir (str): Directory containing archive files.
+        destination_dir (str): Directory to save backups.
+
+    Returns:
+        str: Path to the simulated backup report.
+
+    Raises:
+        FileNotFoundError: If the source directory does not exist.
+        OSError: If report file cannot be created.
+    """
+    if not isinstance(source_dir, str) or not os.path.isdir(source_dir):
+        raise FileNotFoundError(f"Source directory not found: {source_dir}")
+    if not isinstance(destination_dir, str):
+        raise ValueError("destination_dir must be a string.")
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_path = os.path.join(destination_dir, f"backup_report_{timestamp}.txt")
+    os.makedirs(destination_dir, exist_ok=True)
+
+    try:
+        files = os.listdir(source_dir)
+        summary = [
+            f"Backup created at {timestamp}",
+            f"Source: {source_dir}",
+            f"Destination: {destination_dir}",
+            f"Total files: {len(files)}",
+            "",
+            "Files included:"
+        ]
+        for f in files:
+            summary.append(f"- {f}")
+        with open(report_path, "w", encoding="utf-8") as report:
+            report.write("\n".join(summary))
+    except Exception as e:
+        raise OSError(f"Failed to generate backup report: {e}") from e
+
+    return report_path
+
+
+# COMPLEX FUNCTION 
+def review_artwork_submissions(submissions: List[Dict]) -> List[Dict]:
+    """Process and evaluate multiple artwork submissions, approving or flagging based on completeness.
+
+    Args:
+        submissions (List[Dict]): A list of submissions. Each should contain
+            'title', 'description', 'artist_id', and 'medium'.
+
+    Returns:
+        List[Dict]: Submissions with review results and issue tracking.
+
+    Raises:
+        TypeError: If submissions is not a list of dictionaries.
+        ValueError: If any submission is missing required fields.
+    """
+    if not isinstance(submissions, list):
+        raise TypeError("submissions must be a list of dictionaries.")
+
+    required_fields = {"title", "description", "artist_id", "medium"}
+    reviewed = []
+
+    for sub in submissions:
+        if not isinstance(sub, dict):
+            raise TypeError("Each submission must be a dictionary.")
+        missing = [f for f in required_fields if not sub.get(f)]
+        review = sub.copy()
+        review["reviewed_at"] = datetime.utcnow().isoformat()
+        if missing:
+            review["status"] = "flagged"
+            review["issues"] = [f"Missing field: {f}" for f in missing]
+        else:
+            review["status"] = "approved"
+            review["issues"] = []
+        reviewed.append(review)
+
+    approved = sum(1 for s in reviewed if s["status"] == "approved")
+    flagged = len(reviewed) - approved
+    summary = {
+        "total_submissions": len(reviewed),
+        "approved": approved,
+        "flagged": flagged,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    print("Review Summary:", json.dumps(summary, indent=2))
+    return reviewed
